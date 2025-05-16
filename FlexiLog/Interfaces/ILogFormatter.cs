@@ -1,4 +1,4 @@
-﻿namespace FlexiLog.Writer
+﻿namespace FlexiLog.Interfaces
 {
     public interface ILogFormatter
     {

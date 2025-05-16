@@ -1,0 +1,85 @@
+﻿using System;
+using System.Threading;
+using FlexiLog.Interfaces;
+
+namespace FlexiLog.Services.Scheduler
+{
+    public class MidnightOffsetScheduler : IScheduler
+    {
+        private Timer _timer;
+        private readonly object _startLock = new object();
+        private Action _action;
+        private DateTime _lastRunDate;
+        private int _running; // o : 실행X(false) 1 : 실행(true)
+
+        public event EventHandler<Exception> TimerExceptionEvent;
+
+        /// <summary>
+        /// 타이머가 매우 정확하지는 않으므로 자정보다 미세하게 일찍 실행될 수 있어 안정성을 위해 Offset 설정
+        /// 물론 과거 타이머 실행 날짜와 현재 실행 날짜가 동일하다면 타이머 시간 다시 계산해서 활성화
+        /// 기본값 = 10sec
+        /// </summary>
+        public TimeSpan MidnightOffset { get; set; } = TimeSpan.FromSeconds(10);
+
+        public void Start(Action action, bool runImmediately = true) // Start 두번 세번 연속으로 실행할때에 대한 처리 필요?
+        {
+            if (action is null) throw new ArgumentNullException(nameof(action));
+
+            lock (_startLock)
+            {
+                if (_timer != null) throw new InvalidOperationException("Scheduler already started.");
+
+                _action = action;
+                var due = runImmediately ? TimeSpan.Zero : GetDelayUntilNext();
+
+                // 타이머 내부에서 다음 스케줄링
+                _timer = new Timer(OnTimerTick, null, due, Timeout.InfiniteTimeSpan);
+            }
+        }
+
+        private void OnTimerTick(object _)
+        {
+            // 재진입 방지
+            if (Interlocked.Exchange(ref _running, 1) == 1) return;
+
+            try
+            {
+                // 동일한날에 실행되었다면 자정에 정확하게 실행되도록 타이머 변경
+                var today = DateTime.Today;
+                if (_lastRunDate == today)
+                {
+                    var delay = GetDelayUntilNext();
+                    _timer.Change(delay, Timeout.InfiniteTimeSpan);
+                    return;
+                }
+                _lastRunDate = today;
+
+                _action();
+
+                // 다음 스케줄 계산 (자정 + offset)
+                var nextDelay = GetDelayUntilNext();
+
+                _timer.Change(nextDelay, Timeout.InfiniteTimeSpan);
+            }
+            catch (Exception ex) { TimerExceptionEvent?.Invoke(this, ex); }
+            finally { _ = Interlocked.Exchange(ref _running, 0); }
+        }
+
+        private TimeSpan GetDelayUntilNext()
+        {
+            DateTime now = DateTime.Now;
+            return now.Date.AddDays(1).Add(MidnightOffset) - now; // 자정 + offset
+        }
+
+        public void Stop()
+        {
+            var t = Interlocked.Exchange(ref _timer, null);
+            t?.Dispose();
+        }
+
+        public void Dispose()
+        {
+            Stop();
+        }
+    }
+}

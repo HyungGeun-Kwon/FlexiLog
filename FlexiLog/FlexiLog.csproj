@@ -41,15 +41,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Cleaner\IFileCleaner.cs" />
-    <Compile Include="Manager\ILogManager.cs" />
+    <Compile Include="Interfaces\IFileCleaner.cs" />
+    <Compile Include="Interfaces\ILogManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Scheduler\IScheduler.cs" />
-    <Compile Include="Writer\LogEntry.cs" />
-    <Compile Include="Writer\ELogLevel.cs" />
-    <Compile Include="Writer\ILogWriter.cs" />
-    <Compile Include="Writer\ILogFormatter.cs" />
+    <Compile Include="Interfaces\IScheduler.cs" />
+    <Compile Include="Services\Scheduler\MidnightOffsetScheduler.cs" />
+    <Compile Include="Models\LogEntry.cs" />
+    <Compile Include="Models\ELogLevel.cs" />
+    <Compile Include="Interfaces\ILogWriter.cs" />
+    <Compile Include="Interfaces\ILogFormatter.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Services\Cleaner\" />
+    <Folder Include="Services\Writer\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

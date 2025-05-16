@@ -1,4 +1,4 @@
-﻿namespace FlexiLog.Cleaner
+﻿namespace FlexiLog.Interfaces
 {
     public interface IFileCleaner
     {

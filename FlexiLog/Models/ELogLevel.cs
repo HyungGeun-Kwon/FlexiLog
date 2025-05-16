@@ -1,4 +1,4 @@
-﻿namespace FlexiLog.Writer
+﻿namespace FlexiLog.Models
 {
     public enum ELogLevel : int
     {

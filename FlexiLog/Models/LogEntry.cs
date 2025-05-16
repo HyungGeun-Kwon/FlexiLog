@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace FlexiLog.Writer
+namespace FlexiLog.Models
 {
     public sealed class LogEntry
     {
